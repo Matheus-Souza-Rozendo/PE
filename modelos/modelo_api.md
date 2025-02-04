@@ -43,7 +43,7 @@
 ```
 
 ### **PATCH - `/sincronizacao`**
-**Descrição**: Sincroniza os horários do sensor com o horário do servidor (referência).
+**Descrição**: Sincroniza os horários do sensor e da fonte com o horário do servidor (referência).
 
 **Funcionamento**:
 - Calcula o erro entre o horário do computador (servidor de referência) e o horário do celular.
@@ -60,7 +60,8 @@
 {
     "coord_x": 10.1,
     "coord_y": 0.4,
-    "hora_atual": "10:10:01"
+    "hora_atual": "10:10:01",
+    "tipo":"fonte"
 }
 ```
 
@@ -82,6 +83,28 @@
     "coord_x": 10.1,
     "coord_y": 0.4
 }
+```
+
+---
+
+### **POST - `/som_enviado`**
+**Descrição**: Recebe o horario do envio do som
+
+**Funcionamento**:
+- Armazena a informação na tabela `Som`.
+
+**Status HTTP**:
+- `202 Accepted`: Som recebido.
+- `400 Bad Request`: Dados enviados estão incompletos ou inválidos.
+- `500 Internal Server Error`: Falha ao salvar a leitura ou ao acionar o cálculo.
+
+**Exemplo de Dados Esperados**:
+```json
+{
+    "id_fonte": 1,
+    "hora_de_emissao": "10:10:01"
+}
+
 ```
 
 
