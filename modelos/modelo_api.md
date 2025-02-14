@@ -65,6 +65,13 @@
 }
 ```
 
+**Exemplo de Dados Retornados**:
+```json
+{
+    "id":1
+}
+```
+
 ### **GET - `/posicao`**
 **Descrição**: Retorna a posição calculada da fonte sonora.
 
@@ -106,6 +113,17 @@
 }
 
 ```
+
+### **DELETE - `/reset`**
+**Descrição**: Reseta o sistema para um novo experimento
+
+**Funcionamento**:
+- Limpa os dados de todas as tabelas
+
+**Status HTTP**:
+- `202 Accepted`: Deletado com Sucesso.
+- `500 Internal Server Error`: Falha ao deletar.
+
 
 
 

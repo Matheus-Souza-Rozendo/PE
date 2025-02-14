@@ -1,0 +1,15 @@
+{
+    "ordem": [
+        22,
+        22,
+        22
+    ],
+    "sincronizados_fonte": [
+        true
+    ],
+    "sincronizados_sensor": [
+        true,
+        true,
+        true
+    ]
+}

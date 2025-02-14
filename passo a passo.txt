@@ -1,0 +1,10 @@
+
+1) fazer uma função que abre o arquivo JSON
+2) fazer uma função que pega as informaçoes de coordenada do dispositivo passado como parametro
+3) fazer uma função que salva as informaçoes de um dispositivo passado como parametro
+
+
+
+
+
+
