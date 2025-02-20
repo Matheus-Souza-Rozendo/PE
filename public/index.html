@@ -8,6 +8,7 @@
 </head>
 <body>
   <h1>Bem vindo ao Aplicativo do PE</h1>
+  <button id="startAudio">Calcular taxa de amostragem</button>
   <script>
     // Registro do Service Worker
     if ('serviceWorker' in navigator) {
@@ -16,5 +17,6 @@
         .catch(err => console.log('Erro ao registrar o Service Worker:', err));
     }
   </script>
+  <script src="/JS/Audio.js"></script>
 </body>
 </html>
