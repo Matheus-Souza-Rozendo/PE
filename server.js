@@ -9,6 +9,7 @@ const app = express();
 const PORT = 3000;
 const caminhoJSON = __dirname + "/dados.JSON";
 const velocidadeSom = 343;
+
 // Middleware para JSON
 app.use(express.json());
 
@@ -193,14 +194,15 @@ async function verificarSincronizacao() {
    return true;
 }
 
+
 async function calcularTempoChegada(id_sensor, ordem) {
   try {
       const db = await conectarBanco();
       
       const row1 = await db.get("SELECT tempo_de_chegada FROM Leitura WHERE ordem = ? AND id_sensor = ?", [ordem, id_sensor]);
       const row2 = await db.get("SELECT horario FROM Som WHERE ordem_emissao = ? AND id_fonte = 1", [ordem]);
-      //const row3 = await db.get("SELECT error_time FROM Fonte WHERE id_fonte = ?", [1]);
-      //const row4 = await db.get("SELECT error_time FROM Sensor WHERE id_sensor = ?", [id_sensor]);
+      const row3 = await db.get("SELECT error_time FROM Fonte WHERE id_fonte = ?", [1]);
+      const row4 = await db.get("SELECT error_time FROM Sensor WHERE id_sensor = ?", [id_sensor]);
       await db.close();
       console.log('id_sensor:',id_sensor,'- ordem',ordem);
       if (!row1 || !row2 ) {
@@ -211,11 +213,11 @@ async function calcularTempoChegada(id_sensor, ordem) {
       // Converter os valores de TEXT para milissegundos
       const tempo_de_chegada = processarData(row1.tempo_de_chegada);
       const horario_emissao = processarData(row2.horario);
-      //const erro_time_fonte = row3.error_time;
-      //const erro_time_sensor = row4.error_time;
+      const erro_time_fonte = row3.error_time;
+      const erro_time_sensor = row4.error_time;
 
       // Calcular o tempo de chegada corrigido pelo erro
-      return tempo_de_chegada - horario_emissao;
+      return (tempo_de_chegada + erro_time_sensor) - (horario_emissao + erro_time_fonte);
 
   } catch (err) {
       console.error("Erro ao calcular tempo de chegada:", err.message);
@@ -352,37 +354,63 @@ async function calcularposicao(){
   
 }
 
+async function limparBanco() {
+  try {
+      const db = await conectarBanco()
+
+      // Apagar todos os registros das tabelas
+      await db.run("DELETE FROM Som;");
+      await db.run("DELETE FROM Sensor;");
+      await db.run("DELETE FROM Fonte;");
+      await db.run("DELETE FROM Leitura;");
+
+      // Resetar o autoincremento (sqlite_sequence)
+      await db.run("DELETE FROM sqlite_sequence WHERE name='Som';");
+      await db.run("DELETE FROM sqlite_sequence WHERE name='Sensor';");
+      await db.run("DELETE FROM sqlite_sequence WHERE name='Fonte';");
+      await db.run("DELETE FROM sqlite_sequence WHERE name='Leitura';");
+
+      // Liberar espaço no banco
+      await db.run("VACUUM;");
+
+      await db.close();
+      jsonObj = { "ordem": [0,0,0],
+        "sincronizados_fonte": [false],
+        "sincronizados_sensor": [false,false,false]
+    }
+      await fs.writeFile(caminhoJSON,JSON.stringify(jsonObj, null, 4), 'utf8');
+      return { success: true, message: "Todas as tabelas foram limpas e os IDs resetados." };
+  } catch (err) {
+      throw new Error("Erro ao limpar o banco: " + err.message);
+  }
+}
+
 // Rota PATCH para sincronização
 app.patch('/api/sincronizando', async (req, res) => {
-  const agora = new Date();
   const body = req.body; // Recebe dados do cliente
-  const camposEsperados = ["coord_x","coord_y","hora_atual","tipo"];
+  const camposEsperados = ["coord_x","coord_y","erro","tipo"];
   if(!verificaCampos(camposEsperados,body)){
     return res.status(400).json({ error: "Dados enviados estão incompletos." });
   }
   if(!isNumber(body['coord_x']) || !isNumber(body['coord_y'])){
     return res.status(400).json({ error: "Coordenadas devem ser números reais" });
   }
-  // Converter string para objeto Date
-  const parsedDate = new Date(body["hora_atual"]);
-  if (!isValidDate(parsedDate)) {
-    return res.status(400).json({ error: "Data inválida. Envie no formato ISO 8601." });
-  }
+
   if(body["tipo"]!= "sensor" && body["tipo"]!= "fonte"){
     return res.status(400).json({ error: "Tipos aceitos: Fonte e Sensor" });
   }
 
-  const diffMs = parsedDate.getTime() - agora.getTime();
+  const diffUs = body['erro'];
   var id;
   if(body["tipo"]== "sensor"){
-     id = await inserirSensor(body['coord_x'],body['coord_y'],diffMs);
+     id = await inserirSensor(body['coord_x'],body['coord_y'],diffUs);
     if(!id){
       return res.status(500).json({ error: "Erro Interno - Banco de Dados"});
     }
   }
 
   if(body["tipo"]== "fonte"){
-     id = await inserirFonte(body['coord_x'],body['coord_y'],diffMs)
+     id = await inserirFonte(body['coord_x'],body['coord_y'],diffUs)
     if(!id){
       return res.status(500).json({ error: "Erro Interno - Banco de Dados"});
     }
@@ -415,7 +443,6 @@ app.post('/api/som_enviado', async (req, res) => {
   return res.status(200).json({ message: "Som recebido."});
 });
 
-// Rota POST para receber os dados da emissão do SOM pela Fonte
 // Rota POST para receber os dados da emissão do SOM pela Fonte
 app.post('/api/receber_leitura', async (req, res) => {
   try {
@@ -470,39 +497,24 @@ app.get('/api/posicao', async (req, res) => {
   }
 });
 
-async function limparBanco() {
-  try {
-      const db = await conectarBanco()
-
-      // Apagar todos os registros das tabelas
-      await db.run("DELETE FROM Som;");
-      await db.run("DELETE FROM Sensor;");
-      await db.run("DELETE FROM Fonte;");
-      await db.run("DELETE FROM Leitura;");
-
-      // Resetar o autoincremento (sqlite_sequence)
-      await db.run("DELETE FROM sqlite_sequence WHERE name='Som';");
-      await db.run("DELETE FROM sqlite_sequence WHERE name='Sensor';");
-      await db.run("DELETE FROM sqlite_sequence WHERE name='Fonte';");
-      await db.run("DELETE FROM sqlite_sequence WHERE name='Leitura';");
-
-      // Liberar espaço no banco
-      await db.run("VACUUM;");
-
-      await db.close();
-      return { success: true, message: "Todas as tabelas foram limpas e os IDs resetados." };
-  } catch (err) {
-      throw new Error("Erro ao limpar o banco: " + err.message);
-  }
-}
-
 // 🚀 Endpoint DELETE para limpar todas as tabelas
-app.delete("/api/resetar-banco", async (req, res) => {
+app.delete("/api/reset", async (req , res) => {
   try {
       const resultado = await limparBanco();
       return res.status(200).json(resultado);
   } catch (erro) {
       return res.status(500).json({ error: erro.message });
+  }
+});
+
+// Rota GET para receber o horario do servidor
+app.get('/api/horario_servidor', async (req, res) => {
+  try {
+    const dataAtual = new Date();
+    return res.status(200).json({horario_atual: dataAtual.toISOString()});
+  } catch (error) {
+    console.error("Erro na rota /api/horario_servidor:", error);
+    return res.status(500).json({ error: "Erro interno do servidor." });
   }
 });
 

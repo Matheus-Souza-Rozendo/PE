@@ -41,14 +41,15 @@
 }
 
 ```
+---
 
 ### **PATCH - `/sincronizacao`**
 **Descrição**: Sincroniza os horários do sensor e da fonte com o horário do servidor (referência).
 
 **Funcionamento**:
-- Calcula o erro entre o horário do computador (servidor de referência) e o horário do celular.
-- Como estão na mesma rede, ignora os atrasos determinísticos da internet.
-- Salva as informações de sincronização na tabela correspondente.
+- recebe o erro calculado pela fonte/sensor e sua posição
+- armazena na tabela especifica
+
 
 **Status HTTP**:
 - `202 Accepted`: Sincronização bem-sucedida.
@@ -60,7 +61,7 @@
 {
     "coord_x": 10.1,
     "coord_y": 0.4,
-    "hora_atual": "10:10:01",
+    "erro": 100,
     "tipo":"fonte"
 }
 ```
@@ -124,6 +125,25 @@
 - `202 Accepted`: Deletado com Sucesso.
 - `500 Internal Server Error`: Falha ao deletar.
 
+---
+
+### **GET - `/horario_servidor`**
+**Descrição**: Endpoint usado para retornar o horario do servidor, este horario é usado para calcular o erro dos relogios entre o servidor e o sensor/fonte
+
+**Funcionamento**:
+- retorna o horario atual do servidor
+
+**Status HTTP**:
+- `202 Accepted`: Indica que o processamento foi correto.
+- `500 Internal Server Error`: Indica falha no servidor
+
+
+**Exemplo de Retorno**:
+```json
+{
+    "horario_atual":"10:10:00"
+}
+```
 
 
 

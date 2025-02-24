@@ -9,6 +9,27 @@
 <body>
   <h1>Bem vindo ao Aplicativo do PE</h1>
   <button id="startAudio">Calcular taxa de amostragem</button>
+  <button id="sincronizar">Sincronizar Dispositivos</button>
+  <button id="resetar">Resetar Simulação</button>
+  <button id="dados">Enviar Dados</button>
+  <br><br>
+  <form id="formulario-sincronizacao">
+    <label for="coordx">X:</label>
+    <input type="number" name="coordx" id="x">
+    <br><br>
+    <label for="coordy">Y:</label>
+    <input type="number" name="coordy" id="y">
+    <br>
+    <br>
+    <label for="tipo">Tipo Dispositivo:</label>
+    <select name="tipo" id="tipo">
+      <option value="fonte">Fonte</option>
+      <option value="sensor">Sensor</option>
+    </select>
+  </form>
+  <br>
+  <br>
+  <div id="console"></div>
   <script>
     // Registro do Service Worker
     if ('serviceWorker' in navigator) {
@@ -18,5 +39,7 @@
     }
   </script>
   <script src="/JS/Audio.js"></script>
+  <script src="/JS/sincronizar.js"></script>
+  <script src="/JS/enviar_dados.js"></script>
 </body>
 </html>

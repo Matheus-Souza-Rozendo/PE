@@ -1,41 +1,59 @@
-import concurrent.futures
-import time
 import requests
-import json
 from datetime import datetime
 
-def tarefa(dados):
-    """Função que simula um trabalho paralelo"""
-    time.sleep(dados[0])
-    if dados[0] == 0:
-        agora = datetime.now().isoformat()
-        URL = "http://localhost:3000/api/som_enviado"
-        data = {"id_fonte": 1,"hora_de_emissao": agora}
-        # Enviando a requisição PATCH
-        response = requests.post(URL, json=data)
-        # Exibindo a resposta do servidor
-        print(f"Status Code: {response.status_code}")
-        print("Response JSON:", response.json())
-    else:
-        agora = datetime.now().isoformat()
-        URL = "http://localhost:3000/api/receber_leitura"
-        data = {"id_sensor": dados[1],"hora_de_chegada": agora}
-        # Enviando a requisição PATCH
-        response = requests.post(URL, json=data)
-        # Exibindo a resposta do servidor
-        print(f"Status Code: {response.status_code}")
-        print("Response JSON:", response.json())
+# 🔹 Cabeçalhos da requisição (se necessário)
+headers = {
+    "Content-Type": "application/json"
+}
 
-    print(f"Tarefa concluída após {dados[0]} segundos!")
+# 🔹 Capturar horário de envio da requisição
+horario_envio = datetime.utcnow()  # Usar UTC para evitar problemas de fuso horário
 
-# Criar um pool de 4 threads para executar tarefas em paralelo
-with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-    dados = [[0,1],[0.0076676385,1],[0.0102332362,2],[0.0102332362,3]]
-    # Enviar 4 tarefas para execução
-    futures = {executor.submit(tarefa, i): i for i in dados}
+# 🔹 Fazendo a requisição GET ao servidor
+url = "http://localhost:3000/api/horario_servidor"  # Substitua pelo endpoint correto
+response = requests.get(url, headers=headers)
+
+# 🔹 Verificar se a requisição foi bem-sucedida
+if response.status_code == 200:
+    data = response.json()
     
-    # Aguardar a conclusão das tarefas
-    for future in concurrent.futures.as_completed(futures):
-        future.result()  # Garante que as exceções são propagadas
+    # 🔹 Convertendo a string do horário do servidor para datetime
+    data_str = data.get('horario_atual')  # Exemplo: "2025-02-20T14:39:43.791000Z"
+    
+    if data_str:
+        horario_servidor = datetime.strptime(data_str[:-1], "%Y-%m-%dT%H:%M:%S.%f")
 
-print("Todas as tarefas foram concluídas e encerradas!")
+        # 🔹 Capturar horário de recebimento da resposta
+        horario_recebimento = datetime.utcnow()
+
+        # ✅ Cálculo correto da média do envio e recebimento
+        media_horario = horario_envio + (horario_recebimento - horario_envio) / 2
+
+        # ✅ Calcular o erro em relação ao horário do servidor
+        erro = media_horario - horario_servidor
+
+        
+        print(f"erro em microssegundos: {erro.total_seconds() * 1_000_000} µs")
+
+     
+
+        url = "http://localhost:3000/api/sincronizando"
+
+        data = {
+            "coord_x": 10.1,
+            "coord_y": 0.4,
+            "erro": erro.total_seconds() * 1_000_000,  # Convertendo erro para microssegundos
+            "tipo": "fonte"
+        }
+
+        # ✅ Enviando JSON corretamente
+        response = requests.patch(url, json=data, headers=headers)
+
+        # 🔹 Verificando a resposta
+        print("Status Code:", response.status_code)
+        print("Resposta:", response.json())  # Tenta converter resposta para JSON
+
+    else:
+        print("❌ Erro: Campo 'horario_atual' não encontrado na resposta JSON.")
+else:
+    print(f"❌ Erro na requisição: {response.status_code}")

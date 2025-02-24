@@ -1,15 +1,15 @@
 {
     "ordem": [
-        22,
-        22,
-        22
+        0,
+        0,
+        0
     ],
     "sincronizados_fonte": [
-        true
+        false
     ],
     "sincronizados_sensor": [
         true,
-        true,
-        true
+        false,
+        false
     ]
 }
