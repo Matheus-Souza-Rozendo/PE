@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualização de Áudio</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        canvas { width: 100%; height: 300px; background: black; }
+    </style>
+</head>
+<body>
+    <h2>Espectrograma em Tempo Real 🎤📊</h2>
+    <canvas id="canvasBefore"></canvas> <!-- Sinal antes do filtro -->
+    <canvas id="canvasAfter"></canvas>  <!-- Sinal depois do filtro -->
+    <button id="startButton">Iniciar Processamento</button>
+    <script type="module" src="/JS/analisefiltro.js"></script>
+</body>
+</html>

@@ -1,59 +1,35 @@
 import requests
-from datetime import datetime
 
-# 🔹 Cabeçalhos da requisição (se necessário)
-headers = {
-    "Content-Type": "application/json"
+# Definição dos parâmetros
+url = "https://192.168.1.4:3000/api" 
+metodo_http = "DELETE" 
+endpoint = "/reset"
+#endpoint = "/som_enviado"
+#dados = { "id_sensor":1, "hora_de_chegada":"2025-03-02T17:00:00.016492Z"}
+dados = { "id_sensor":3, "hora_de_chegada":"2025-03-02T17:00:00.021023Z"}
+#dados = { "id_sensor":3, "hora_de_chegada":"2025-03-02T17:00:00.021023Z"}
+#dados = { "id_fonte":1, "hora_de_emissao":"2025-03-02T17:00:00.000000Z"}
+url = url + endpoint 
+# Dicionário mapeando métodos HTTP para as funções da biblioteca requests
+metodos = {
+    "GET": requests.get,
+    "POST": requests.post,
+    "PUT": requests.put,
+    "DELETE": requests.delete,
+    "PATCH": requests.patch
 }
 
-# 🔹 Capturar horário de envio da requisição
-horario_envio = datetime.utcnow()  # Usar UTC para evitar problemas de fuso horário
-
-# 🔹 Fazendo a requisição GET ao servidor
-url = "http://localhost:3000/api/horario_servidor"  # Substitua pelo endpoint correto
-response = requests.get(url, headers=headers)
-
-# 🔹 Verificar se a requisição foi bem-sucedida
-if response.status_code == 200:
-    data = response.json()
-    
-    # 🔹 Convertendo a string do horário do servidor para datetime
-    data_str = data.get('horario_atual')  # Exemplo: "2025-02-20T14:39:43.791000Z"
-    
-    if data_str:
-        horario_servidor = datetime.strptime(data_str[:-1], "%Y-%m-%dT%H:%M:%S.%f")
-
-        # 🔹 Capturar horário de recebimento da resposta
-        horario_recebimento = datetime.utcnow()
-
-        # ✅ Cálculo correto da média do envio e recebimento
-        media_horario = horario_envio + (horario_recebimento - horario_envio) / 2
-
-        # ✅ Calcular o erro em relação ao horário do servidor
-        erro = media_horario - horario_servidor
-
-        
-        print(f"erro em microssegundos: {erro.total_seconds() * 1_000_000} µs")
-
-     
-
-        url = "http://localhost:3000/api/sincronizando"
-
-        data = {
-            "coord_x": 10.1,
-            "coord_y": 0.4,
-            "erro": erro.total_seconds() * 1_000_000,  # Convertendo erro para microssegundos
-            "tipo": "fonte"
-        }
-
-        # ✅ Enviando JSON corretamente
-        response = requests.patch(url, json=data, headers=headers)
-
-        # 🔹 Verificando a resposta
-        print("Status Code:", response.status_code)
-        print("Resposta:", response.json())  # Tenta converter resposta para JSON
-
+# Verifica se o método é válido
+if metodo_http in metodos:
+    # Faz a requisição HTTP usando o método correspondente
+    if metodo_http in ["POST", "PUT", "PATCH"]:
+        resposta = metodos[metodo_http](url, json=dados, verify=False)
     else:
-        print("❌ Erro: Campo 'horario_atual' não encontrado na resposta JSON.")
+        resposta = metodos[metodo_http](url, verify=False)
+
+    # Exibe a resposta
+    print(f"Status Code: {resposta.status_code}")
+    print(f"Resposta: {resposta.text}")
+
 else:
-    print(f"❌ Erro na requisição: {response.status_code}")
+    print("Erro: Método HTTP inválido!")

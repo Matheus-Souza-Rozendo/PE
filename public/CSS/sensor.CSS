@@ -1,0 +1,96 @@
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    text-align: center;
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    padding: 20px;
+}
+
+/* Estilização do título */
+h2 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Estilização dos botões */
+button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s ease-in-out;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+/* Estilização do formulário */
+form {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+label {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+input[type="number"] {
+    width: 80px;
+    padding: 8px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* Ajuste no espaçamento */
+form input {
+    margin-bottom: 10px;
+}
+
+/* Estilização do terminal */
+#terminal {
+    width: 100%;
+    max-width: 600px;
+    height: 150px;
+    background: black;
+    color: limegreen;
+    font-family: monospace;
+    padding: 10px;
+    margin: 20px auto;
+    border-radius: 5px;
+    overflow-y: auto;
+    text-align: left;
+}
+
+/* Responsividade */
+@media (max-width: 600px) {
+    button {
+        width: 100%;
+    }
+
+    input[type="number"] {
+        width: 100px;
+    }
+}
