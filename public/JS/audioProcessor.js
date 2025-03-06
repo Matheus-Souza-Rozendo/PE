@@ -20,6 +20,30 @@ export class AudioProcessor {
         this.microfoneStream = null;
         this.terminal = new Terminal('terminal')
     }
+    
+    async fonte(url) {
+        try {
+            this.ativo=true;
+            this.criarContexto(); // Cria o contexto de áudio
+            
+            // Carrega e decodifica o áudio
+            const arrayBuffer = await this.loadAudio(url);
+            const audioBuffer = await this.decodeAudioData(arrayBuffer);
+    
+            this.terminal.show("🎵 Reprodução iniciada a cada 10 segundos...");
+    
+            // Loop para tocar o áudio a cada 10 segundos
+            while (this.ativo) {
+                this.playAudio(audioBuffer); // Toca o áudio
+                await this.delay(10000); // Aguarda 10 segundos
+            }
+        } catch (error) {
+            this.terminal.show("❌ Erro ao carregar ou reproduzir o arquivo de áudio");
+            console.error('Erro ao carregar ou reproduzir o arquivo de áudio:', error);
+        }
+    }
+    
+   
     async sensor() {
         try {
             this.ativo=true;
@@ -97,6 +121,7 @@ export class AudioProcessor {
             console.error("Erro ao capturar áudio:", error);
         }
     }
+
 
     async analisarFiltro() {
         try {
@@ -233,6 +258,26 @@ export class AudioProcessor {
             return null;
         }
     }
+
+    async loadAudio(url) {
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        return arrayBuffer;
+    }
+
+    async decodeAudioData(arrayBuffer) {
+        const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+        return audioBuffer;
+    }
+
+    playAudio(audioBuffer) {
+        const source = this.audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(this.audioContext.destination);
+        source.start();
+    }
+
+
     
 }
 

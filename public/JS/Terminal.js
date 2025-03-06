@@ -6,7 +6,7 @@ export class Terminal{
     }
 
     show(texto){
-        this.terminal.innerHTML = texto + "<br>"; 
+        this.terminal.innerHTML += texto + "<br>"; 
     }
 
     clear(){
